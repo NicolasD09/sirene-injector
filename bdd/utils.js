@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const connect = async () => {
   try {
-    return await mongoose.connect("mongodb://127.0.0.1:27017", {
+    return await mongoose.connect("mongodb://127.0.0.1:27017/Etablissements", {
       autoCreate: false,
-      dbName: "sirene",
+      dbName: "Etablissements",
     });
   } catch (e) {
     console.log(e);
