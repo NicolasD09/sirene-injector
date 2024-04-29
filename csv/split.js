@@ -2,6 +2,11 @@ const fs = require("fs");
 const readline = require("readline");
 
 async function split(path) {
+
+  function append(data) {
+    fs.appendFileSync(`output/${currentFile}.csv`, data);
+  }
+
   let header;
   let linesPerFile = 50000;
   let currentLine = 0;
@@ -25,18 +30,18 @@ async function split(path) {
 
     // End of stream hasn't reached the max number of lines
     if (!line && currentLine !== linesPerFile) {
-      fs.appendFileSync(`put/${currentFile}.csv`, data);
+      append(data);
     }
 
     if (currentLine === linesPerFile) {
       // append data for current file
-      fs.appendFileSync(`put/${currentFile}.csv`, data);
+      append(data);
       data = "";
       currentLine = 0;
       currentFile++;
 
       // append header to next file
-      fs.appendFileSync(`put/${currentFile}.csv`, header + "\n");
+      append(header + "\n");
     }
   }
 }

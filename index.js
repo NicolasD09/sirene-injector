@@ -2,7 +2,9 @@ const { connect, disconnect, dbLogs } = require("./bdd/utils");
 const fs = require("fs")
 const path = require('path');
 const pm2 = require('pm2')
+const split = require("./csv/split");
 
+const csvPath = process.argv[2];
 const folder = "./output";
 
 const files = fs.readdirSync(folder).filter(file => path.extname(file) === ".csv")
@@ -13,6 +15,9 @@ dbLogs();
 start();
 
 async function start() {
+  if(csvPath) {
+    await split(csvPath);
+  }
   await connect();
 
   let i = 1
