@@ -16,7 +16,21 @@ async function start() {
   await connect();
 
   let i = 1
-  let indexMax = 3;
+  let indexMax = files.length;
+  let deletedInstances = 0;
+  pm2.start({
+    script: 'workers/worker.js',
+    name: `worker`,
+    exec_mode: 'cluster',
+    instances: "max",
+    autorestart: false
+  }, (error) => {
+    if (error) {
+      console.error(error)
+      pm2.disconnect()
+      disconnect();
+    }
+  })
   pm2.connect((err) => {
     if (err) {
       console.error(err)
@@ -26,11 +40,10 @@ async function start() {
     pm2.launchBus((workerError, bus) => {
       bus.on('process:msg', (packet) => {
         let workerId = packet.process.pm_id
-        console.log("message received from worker n°", workerId)
-        let data = packet.data
+        const {data} = packet;
         if (data.state === 'idle') {
-          console.log("current index =", i)
           if (i <= indexMax) {
+            console.log("create worker", workerId, i)
             pm2.sendDataToProcessId(workerId, {
               id: workerId,
               type: 'process:msg',
@@ -44,23 +57,19 @@ async function start() {
               }
             })
           } else {
-            pm2.delete(workerId)
+            pm2.delete(workerId, (err) => {
+              if(!err) {
+                deletedInstances++;
+                if(deletedInstances === indexMax) {
+                  disconnect();
+                  pm2.disconnect()
+                }
+              }
+            })
           }
         }
       })
     })
 
-    pm2.start({
-      script: 'workers/worker.js',
-      name: `worker`,
-      exec_mode: 'cluster',
-      instances: Math.min(indexMax, 10),
-    }, (error) => {
-      if (error) {
-        console.error(error)
-        pm2.disconnect()
-        disconnect();
-      }
-    })
   })
 }
